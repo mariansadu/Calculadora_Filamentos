@@ -462,6 +462,35 @@
 
   .hidden { display: none !important; }
 
+  .price-copy {
+    cursor: pointer;
+    position: relative;
+    transition: color 0.15s;
+    display: inline-block;
+  }
+  .price-copy:hover { color: var(--accent); }
+  .price-copy.copied { color: var(--positive) !important; }
+  .price-copy.copied::after {
+    content: '✓ copiado';
+    position: absolute;
+    left: 0;
+    top: -22px;
+    background: var(--positive);
+    color: white;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-family: var(--sans);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    border-radius: 3px;
+    white-space: nowrap;
+    animation: fadeIn 0.15s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   footer {
     text-align: center;
     margin-top: 40px;
@@ -658,6 +687,33 @@
       </div>
     </div>
 
+    <div class="subsection-label">Definición de precio (marketplace Liverpool)</div>
+    <div class="results">
+      <div class="result-cell">
+        <div class="result-label">Precio base</div>
+        <div class="result-value price-copy" id="pdBase" onclick="copiarPrecio(this)">$0.00</div>
+        <div class="result-sub">50% arriba del mínimo</div>
+      </div>
+      <div class="result-cell">
+        <div class="result-label">Precio mínimo</div>
+        <div class="result-value price-copy" id="pdMinimo" onclick="copiarPrecio(this)">$0.00</div>
+        <div class="result-sub">venta ÷ 3</div>
+      </div>
+      <div class="result-cell">
+        <div class="result-label">Precio máximo</div>
+        <div class="result-value price-copy" id="pdMaximo" onclick="copiarPrecio(this)">$0.00</div>
+        <div class="result-sub">venta + 50%</div>
+      </div>
+      <div class="result-cell">
+        <div class="result-label">Precio descuento</div>
+        <div class="result-value price-copy" id="pdDescuento" onclick="copiarPrecio(this)">$0.00</div>
+        <div class="result-sub">venta + 20%</div>
+      </div>
+    </div>
+    <div style="font-family: var(--mono); font-size: 11px; color: var(--ink-soft); margin-top: 8px;">
+      Haz clic en cualquier monto para copiarlo al portapapeles.
+    </div>
+
     <div class="actions">
       <button onclick="guardarPieza()">Guardar en registro</button>
       <button class="secondary" onclick="limpiarFormulario()">Limpiar</button>
@@ -793,6 +849,41 @@
     return '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  function setPrecioCopy(id, valor) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = fmt(valor);
+    el.dataset.raw = valor.toFixed(2);
+  }
+
+  function copiarPrecio(el) {
+    const raw = el.dataset.raw || el.textContent.replace(/[^0-9.]/g, '');
+    const showCopied = () => {
+      el.classList.add('copied');
+      setTimeout(() => el.classList.remove('copied'), 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(raw).then(showCopied).catch(() => {
+        fallbackCopy(raw);
+        showCopied();
+      });
+    } else {
+      fallbackCopy(raw);
+      showCopied();
+    }
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
   function actualizarTarifas() {
     const t = obtenerTarifas();
     document.getElementById('costoFilGramo').textContent = fmt(t.filGramo);
@@ -884,6 +975,17 @@
       }
     }
     document.getElementById('rPrecioVentaSub').textContent = subText;
+
+    // Definición de precio (marketplace)
+    const pv = p.precioVenta;
+    const pdMinimo = pv / 3;
+    const pdBase = pdMinimo * 1.5;   // 50% arriba del mínimo
+    const pdMaximo = pv * 1.5;       // 50% arriba de la venta
+    const pdDescuento = pv * 1.20;   // 20% arriba de la venta
+    setPrecioCopy('pdMinimo', pdMinimo);
+    setPrecioCopy('pdBase', pdBase);
+    setPrecioCopy('pdMaximo', pdMaximo);
+    setPrecioCopy('pdDescuento', pdDescuento);
 
     // Piezas por rollo
     const ppr = document.getElementById('piezasPorRollo');
