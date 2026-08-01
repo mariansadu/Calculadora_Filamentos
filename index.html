@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Impresión 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAF7F2;
+    --surface: #FFFFFF;
+    --ink: #1A1A1A;
+    --ink-soft: #6B6B6B;
+    --accent: #D85A2B;
+    --accent-soft: #FBEEE6;
+    --border: #E5E0D8;
+    --border-strong: #C9C3B8;
+    --positive: #2D6B4F;
+    --negative: #B23A3A;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  .container { max-width: 920px; margin: 0 auto; }
+
+  header {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .subtitle { margin-top: 8px; color: var(--ink-soft); font-size: 14px; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .panel-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+
+  .subsection-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 18px 0 8px;
+    font-weight: 500;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .unit {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-soft);
+    background: var(--bg);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  input[type="number"], input[type="text"] {
+    font-family: var(--mono);
+    font-size: 16px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--ink);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+  }
+
+  input[type="number"]:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 20px;
+  }
+
+  .result-cell { background: var(--surface); padding: 16px; }
+  .result-cell.highlight { background: var(--accent-soft); }
+  .result-cell.dark { background: var(--ink); color: var(--bg); }
+  .result-cell.dark .result-label { color: rgba(255,255,255,0.6); }
+  .result-cell.dark .result-value { color: var(--bg); }
+
+  .result-label {
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .result-value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .result-value.positive { color: var(--positive); }
+  .result-value.negative { color: var(--negative); }
+
+  .result-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    background: var(--ink);
+    color: var(--bg);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+
+  button:hover { background: var(--accent); border-color: var(--accent); }
+
+  button.secondary { background: transparent; color: var(--ink); }
+  button.secondary:hover {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  button.danger {
+    background: transparent;
+    color: var(--negative);
+    border-color: var(--negative);
+  }
+  button.danger:hover { background: var(--negative); color: var(--surface); }
+
+  /* Segmented control */
+  .seg-group {
+    display: grid;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .seg-group.cols-2 { grid-template-columns: 1fr 1fr; }
+  .seg-group.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .seg-btn {
+    background: var(--surface);
+    color: var(--ink);
+    border: none;
+    border-right: 1px solid var(--border-strong);
+    border-radius: 0;
+    padding: 14px 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transition: all 0.15s;
+    font-family: var(--sans);
+  }
+  .seg-btn:last-child { border-right: none; }
+  .seg-btn:hover {
+    background: var(--accent-soft);
+    color: var(--ink);
+    border-color: var(--border-strong);
+  }
+  .seg-btn.active {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .seg-btn.active:hover { background: var(--ink); color: var(--bg); }
+
+  .seg-label {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .seg-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 400;
+    opacity: 0.75;
+  }
+
+  /* Volume summary */
+  .vol-summary {
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    padding: 20px;
+    margin-top: 20px;
+    font-family: var(--mono);
+  }
+
+  .vol-section + .vol-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border-strong);
+  }
+
+  .vol-section-title {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .vol-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 4px 0;
+    font-size: 13px;
+    gap: 12px;
+  }
+
+  .vol-row > span:first-child {
+    color: var(--ink-soft);
+  }
+
+  .vol-value {
+    color: var(--ink);
+    font-weight: 500;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .vol-value.negative { color: var(--negative); }
+  .vol-value.positive { color: var(--positive); }
+
+  .vol-row.total {
+    border-top: 1px solid var(--ink);
+    margin-top: 8px;
+    padding-top: 8px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .vol-row.total > span:first-child { color: var(--ink); }
+
+  .vol-section.vol-final {
+    background: var(--ink);
+    color: var(--bg);
+    margin: 16px -20px -20px;
+    padding: 16px 20px;
+    border-top: 0 !important;
+  }
+
+  .vol-final .vol-section-title { display: none; }
+
+  .vol-final .vol-row > span:first-child {
+    color: rgba(255,255,255,0.7);
+  }
+
+  .vol-final .vol-value { color: var(--bg); }
+
+  .vol-final .vol-row.vol-big {
+    font-size: 14px;
+    font-weight: 700;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .vol-final .vol-row.vol-big .vol-value {
+    font-size: 22px;
+  }
+
+  .vol-final .vol-row.vol-sub {
+    font-size: 12px;
+    padding: 2px 0;
+  }
+
+  .vol-final .vol-value.positive { color: #7AC79E; }
+  .vol-final .vol-value.negative { color: #FF8B8B; }
+
+  .vol-empty {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 13px;
+    padding: 20px 0;
+    font-family: var(--sans);
+  }
+
+  /* History table */
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .history-table th {
+    text-align: left;
+    padding: 10px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--border-strong);
+    white-space: nowrap;
+  }
+
+  .history-table th.num, .history-table td.num {
+    text-align: right;
+    font-family: var(--mono);
+  }
+
+  .history-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tr.totals { background: var(--accent-soft); font-weight: 600; }
+  .history-table tr.totals td { border-top: 2px solid var(--ink); border-bottom: none; }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 6px;
+  }
+  .delete-btn:hover { color: var(--negative); background: none; }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px;
+    border-radius: 3px;
+  }
+
+  .summary-card .result-value { font-size: 18px; }
+
+  details {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-top: 16px;
+  }
+
+  summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    user-select: none;
+  }
+
+  summary:hover { color: var(--accent); }
+
+  .hidden { display: none !important; }
+
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-family: var(--mono);
+  }
+
+  @media (max-width: 600px) {
+    .history-table th, .history-table td {
+      padding: 8px 4px;
+      font-size: 11px;
+    }
+    .result-value { font-size: 18px; }
+    .seg-label { font-size: 15px; }
+    .seg-sub { font-size: 9px; }
+    .vol-row { font-size: 12px; }
+    .vol-final .vol-row.vol-big .vol-value { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="eyebrow">Taller / Impresión 3D</div>
+    <h1>Calculadora de costos</h1>
+    <div class="subtitle">Calcula producción, agrega utilidad, envío y comisión, planifica lotes y registra cada venta.</div>
+  </header>
+
+  <!-- SECCIÓN 01: CONFIGURACIÓN -->
+  <section class="panel">
+    <div class="panel-header">
+      <div class="panel-title">01 — Configuración del rollo</div>
+      <div class="panel-note">se guarda automáticamente</div>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label>Peso del rollo <span class="unit">g</span></label>
+        <input type="number" id="rolloPeso" value="1000" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>Costo del rollo <span class="unit">MXN</span></label>
+        <input type="number" id="rolloPrecio" value="292" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Luz + mantenimiento <span class="unit">MXN/g</span></label>
+        <input type="number" id="tarifaExtra" value="0.05" min="0" step="0.01">
+      </div>
+    </div>
+
+    <div class="results">
+      <div class="result-cell">
+        <div class="result-label">Filamento por gramo</div>
+        <div class="result-value" id="costoFilGramo">$0.292</div>
+      </div>
+      <div class="result-cell highlight">
+        <div class="result-label">Costo total por gramo</div>
+        <div class="result-value" id="costoTotalGramo">$0.342</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN 02: COSTO DE PRODUCCIÓN -->
+  <section class="panel">
+    <div class="panel-header">
+      <div class="panel-title">02 — Costo de producción</div>
+      <div class="panel-note">filamento + luz/mant.</div>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label>Nombre / descripción</label>
+        <input type="text" id="piezaNombre" placeholder="Ej. Llavero personalizado">
+      </div>
+      <div class="field">
+        <label>Peso de la pieza <span class="unit">g</span></label>
+        <input type="number" id="piezaPeso" placeholder="0" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Cantidad de piezas</label>
+        <input type="number" id="piezaCantidad" value="1" min="1" step="1">
+      </div>
+    </div>
+
+    <div class="results">
+      <div class="result-cell">
+        <div class="result-label">Filamento</div>
+        <div class="result-value" id="rFilamento">$0.00</div>
+      </div>
+      <div class="result-cell">
+        <div class="result-label">Luz + Mant.</div>
+        <div class="result-value" id="rLuz">$0.00</div>
+      </div>
+      <div class="result-cell highlight">
+        <div class="result-label">Costo de producción</div>
+        <div class="result-value" id="rCostoProd">$0.00</div>
+        <div class="result-sub" id="rCostoProdSub"></div>
+      </div>
+    </div>
+
+    <details>
+      <summary>¿Cuántas piezas salen por rollo?</summary>
+      <div style="margin-top:12px; font-family: var(--mono); font-size: 13px; color: var(--ink-soft);" id="piezasPorRollo">
+        Ingresa un peso para calcular.
+      </div>
+    </details>
+  </section>
+
+  <!-- SECCIÓN 03: PRECIO DE VENTA -->
+  <section class="panel">
+    <div class="panel-header">
+      <div class="panel-title">03 — Precio de venta</div>
+      <div class="panel-note">utilidad → envío → comisión</div>
+    </div>
+
+    <div class="subsection-label">Utilidad</div>
+    <div class="seg-group cols-4" id="multGroup">
+      <button class="seg-btn active" data-mult="1">
+        <span class="seg-label">1X</span>
+        <span class="seg-sub">utilidad = costo</span>
+      </button>
+      <button class="seg-btn" data-mult="2">
+        <span class="seg-label">2X</span>
+        <span class="seg-sub">utilidad × 2</span>
+      </button>
+      <button class="seg-btn" data-mult="3">
+        <span class="seg-label">3X</span>
+        <span class="seg-sub">utilidad × 3</span>
+      </button>
+      <button class="seg-btn" data-mult="manual">
+        <span class="seg-label">Manual</span>
+        <span class="seg-sub">monto fijo</span>
+      </button>
+    </div>
+    <div class="field hidden" id="utilidadManualWrap" style="margin-bottom:16px;">
+      <label>Utilidad manual <span class="unit">MXN</span></label>
+      <input type="number" id="utilidadManual" placeholder="0" min="0" step="0.01">
+    </div>
+
+    <div class="subsection-label">Envío</div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Costo de envío <span class="unit">MXN</span></label>
+      <input type="number" id="piezaEnvio" placeholder="opcional" min="0" step="0.01">
+    </div>
+
+    <div class="subsection-label">Comisión de marketplace</div>
+    <div class="seg-group cols-4" id="comGroup">
+      <button class="seg-btn active" data-com="6">
+        <span class="seg-label">6%</span>
+        <span class="seg-sub">tarifa baja</span>
+      </button>
+      <button class="seg-btn" data-com="16">
+        <span class="seg-label">16%</span>
+        <span class="seg-sub">tarifa media</span>
+      </button>
+      <button class="seg-btn" data-com="19">
+        <span class="seg-label">19%</span>
+        <span class="seg-sub">tarifa alta</span>
+      </button>
+      <button class="seg-btn" data-com="manual">
+        <span class="seg-label">Manual</span>
+        <span class="seg-sub">% libre</span>
+      </button>
+    </div>
+    <div class="field hidden" id="comisionManualWrap" style="margin-bottom:4px;">
+      <label>Comisión manual <span class="unit">%</span></label>
+      <input type="number" id="comisionManual" placeholder="0" min="0" max="100" step="0.1">
+    </div>
+
+    <div class="results">
+      <div class="result-cell">
+        <div class="result-label">Utilidad</div>
+        <div class="result-value positive" id="rUtilidad">$0.00</div>
+        <div class="result-sub" id="rUtilidadSub"></div>
+      </div>
+      <div class="result-cell">
+        <div class="result-label">Envío</div>
+        <div class="result-value" id="rEnvio">—</div>
+      </div>
+      <div class="result-cell">
+        <div class="result-label">Comisión</div>
+        <div class="result-value negative" id="rComision">—</div>
+        <div class="result-sub" id="rComisionSub"></div>
+      </div>
+      <div class="result-cell dark">
+        <div class="result-label">Precio de venta</div>
+        <div class="result-value" id="rPrecioVenta">$0.00</div>
+        <div class="result-sub" id="rPrecioVentaSub" style="color: rgba(255,255,255,0.6)"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button onclick="guardarPieza()">Guardar en registro</button>
+      <button class="secondary" onclick="limpiarFormulario()">Limpiar</button>
+    </div>
+  </section>
+
+  <!-- SECCIÓN 04: PRODUCCIÓN POR VOLUMEN -->
+  <section class="panel">
+    <div class="panel-header">
+      <div class="panel-title">04 — Producción por volumen</div>
+      <div class="panel-note">planifica tu lote completo</div>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label>Piezas a producir <span class="unit">cantidad</span></label>
+        <input type="number" id="volCantidad" placeholder="Ej. 100" min="0" step="1">
+      </div>
+    </div>
+
+    <div class="subsection-label">Modo de cálculo del filamento</div>
+    <div class="seg-group cols-2" id="modoCarreteGroup">
+      <button class="seg-btn active" data-modo="completo">
+        <span class="seg-label">Carretes completos</span>
+        <span class="seg-sub">pagas el rollo aunque sobre</span>
+      </button>
+      <button class="seg-btn" data-modo="proporcional">
+        <span class="seg-label">Filamento usado</span>
+        <span class="seg-sub">solo lo que gastas</span>
+      </button>
+    </div>
+
+    <div class="vol-summary" id="volSummary">
+      <div class="vol-empty">Define la cantidad de piezas y el peso (sección 02) para calcular el lote.</div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN 05: HISTORIAL -->
+  <section class="panel">
+    <div class="panel-header">
+      <div class="panel-title">05 — Registro de piezas</div>
+      <div class="panel-note" id="contadorRegistro">0 registros</div>
+    </div>
+
+    <div class="summary-cards" id="summaryCards" style="display:none;">
+      <div class="summary-card">
+        <div class="result-label">Piezas totales</div>
+        <div class="result-value" id="sumPiezas">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="result-label">Filamento usado</div>
+        <div class="result-value" id="sumGramos">0 g</div>
+      </div>
+      <div class="summary-card">
+        <div class="result-label">Utilidad neta</div>
+        <div class="result-value positive" id="sumUtilidad">$0</div>
+      </div>
+      <div class="summary-card">
+        <div class="result-label">Ventas totales</div>
+        <div class="result-value" id="sumVenta">$0</div>
+      </div>
+    </div>
+
+    <div id="historialContenedor">
+      <div class="empty" id="emptyMsg">Aún no has guardado ninguna pieza.</div>
+    </div>
+
+    <div class="actions" id="historialAcciones" style="display:none;">
+      <button class="secondary" onclick="exportarCSV()">Exportar a CSV</button>
+      <button class="danger" onclick="borrarTodo()">Borrar todo</button>
+    </div>
+  </section>
+
+  <footer>
+    Datos guardados localmente en tu navegador · Sin conexión a internet
+  </footer>
+
+</div>
+
+<script>
+  const LS_CONFIG = 'calc3d_config_v3';
+  const LS_HISTORIAL = 'calc3d_historial_v3';
+
+  let multiplicadorActual = '1';
+  let comisionActual = '6';
+  let volModo = 'completo';
+
+  // ===== CONFIG =====
+  function cargarConfig() {
+    const saved = localStorage.getItem(LS_CONFIG);
+    if (saved) {
+      const cfg = JSON.parse(saved);
+      document.getElementById('rolloPeso').value = cfg.rolloPeso ?? 1000;
+      document.getElementById('rolloPrecio').value = cfg.rolloPrecio ?? 292;
+      document.getElementById('tarifaExtra').value = cfg.tarifaExtra ?? 0.05;
+    }
+  }
+
+  function guardarConfig() {
+    const cfg = {
+      rolloPeso: parseFloat(document.getElementById('rolloPeso').value) || 0,
+      rolloPrecio: parseFloat(document.getElementById('rolloPrecio').value) || 0,
+      tarifaExtra: parseFloat(document.getElementById('tarifaExtra').value) || 0
+    };
+    localStorage.setItem(LS_CONFIG, JSON.stringify(cfg));
+  }
+
+  function cargarHistorial() {
+    const saved = localStorage.getItem(LS_HISTORIAL);
+    return saved ? JSON.parse(saved) : [];
+  }
+
+  function guardarHistorial(historial) {
+    localStorage.setItem(LS_HISTORIAL, JSON.stringify(historial));
+  }
+
+  // ===== CÁLCULOS =====
+  function obtenerTarifas() {
+    const peso = parseFloat(document.getElementById('rolloPeso').value) || 1;
+    const precio = parseFloat(document.getElementById('rolloPrecio').value) || 0;
+    const extra = parseFloat(document.getElementById('tarifaExtra').value) || 0;
+    const filGramo = precio / peso;
+    return {
+      filGramo,
+      extraGramo: extra,
+      totalGramo: filGramo + extra,
+      rolloPeso: peso,
+      rolloPrecio: precio
+    };
+  }
+
+  function fmt(n) {
+    return '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function actualizarTarifas() {
+    const t = obtenerTarifas();
+    document.getElementById('costoFilGramo').textContent = fmt(t.filGramo);
+    document.getElementById('costoTotalGramo').textContent = fmt(t.totalGramo);
+    guardarConfig();
+    calcular();
+  }
+
+  function obtenerTasaComision() {
+    if (comisionActual === 'manual') {
+      return Math.min(parseFloat(document.getElementById('comisionManual').value) || 0, 99) / 100;
+    }
+    return parseFloat(comisionActual) / 100;
+  }
+
+  // Devuelve los valores por pieza para usar en cualquier cálculo
+  function calcularPorPieza() {
+    const t = obtenerTarifas();
+    const peso = parseFloat(document.getElementById('piezaPeso').value) || 0;
+    const cantidad = parseInt(document.getElementById('piezaCantidad').value) || 1;
+    const envio = parseFloat(document.getElementById('piezaEnvio').value) || 0;
+    const utilidadManual = parseFloat(document.getElementById('utilidadManual').value) || 0;
+
+    const pesoTotal = peso * cantidad;
+    const fil = pesoTotal * t.filGramo;
+    const luz = pesoTotal * t.extraGramo;
+    const costoProduccion = fil + luz;
+
+    let utilidad = 0;
+    let etiquetaUtilidad = '';
+    if (multiplicadorActual === 'manual') {
+      utilidad = utilidadManual;
+      etiquetaUtilidad = 'monto manual';
+    } else {
+      const mult = parseInt(multiplicadorActual);
+      utilidad = costoProduccion * mult;
+      etiquetaUtilidad = `${mult}× costo de producción`;
+    }
+
+    const tasaComision = obtenerTasaComision();
+    const subtotal = costoProduccion + utilidad + envio;
+    let precioVenta = subtotal;
+    let comision = 0;
+    if (tasaComision > 0 && tasaComision < 1) {
+      precioVenta = subtotal / (1 - tasaComision);
+      comision = precioVenta - subtotal;
+    }
+
+    return {
+      t, peso, cantidad, pesoTotal, fil, luz, envio,
+      costoProduccion, utilidad, etiquetaUtilidad,
+      tasaComision, subtotal, precioVenta, comision
+    };
+  }
+
+  function calcular() {
+    const p = calcularPorPieza();
+
+    // Sección 02
+    document.getElementById('rFilamento').textContent = fmt(p.fil);
+    document.getElementById('rLuz').textContent = fmt(p.luz);
+    document.getElementById('rCostoProd').textContent = fmt(p.costoProduccion);
+    document.getElementById('rCostoProdSub').textContent = p.cantidad > 1
+      ? `${p.cantidad} piezas · ${fmt(p.costoProduccion / p.cantidad)} c/u`
+      : '';
+
+    // Sección 03
+    document.getElementById('rUtilidad').textContent = fmt(p.utilidad);
+    document.getElementById('rUtilidadSub').textContent = p.etiquetaUtilidad;
+    document.getElementById('rEnvio').textContent = p.envio > 0 ? fmt(p.envio) : '—';
+
+    const comEl = document.getElementById('rComision');
+    const comSubEl = document.getElementById('rComisionSub');
+    if (p.tasaComision > 0) {
+      comEl.textContent = '−' + fmt(p.comision);
+      comSubEl.textContent = `${(p.tasaComision * 100).toFixed(1)}% del precio`;
+    } else {
+      comEl.textContent = '—';
+      comSubEl.textContent = 'sin comisión';
+    }
+
+    document.getElementById('rPrecioVenta').textContent = fmt(p.precioVenta);
+    const margenSobreCosto = p.costoProduccion > 0 ? (p.utilidad / p.costoProduccion) * 100 : 0;
+    let subText = '';
+    if (p.costoProduccion > 0) {
+      subText = `margen: ${margenSobreCosto.toFixed(0)}% sobre costo`;
+      if (p.tasaComision > 0) {
+        subText += ` · netas ${fmt(p.subtotal)}`;
+      }
+    }
+    document.getElementById('rPrecioVentaSub').textContent = subText;
+
+    // Piezas por rollo
+    const ppr = document.getElementById('piezasPorRollo');
+    if (p.peso > 0) {
+      const totalPiezas = Math.floor(p.t.rolloPeso / p.peso);
+      const sobrante = p.t.rolloPeso - (totalPiezas * p.peso);
+      const costoUnit = p.peso * p.t.totalGramo;
+      ppr.innerHTML = `Salen <strong style="color:var(--ink)">${totalPiezas} piezas</strong> por rollo de ${p.t.rolloPeso}g (sobran ${sobrante.toFixed(1)}g).<br>Costo de producir las ${totalPiezas} piezas: <strong style="color:var(--ink)">${fmt(totalPiezas * costoUnit)}</strong> <span style="color:var(--ink-soft)">(sin envío, utilidad ni comisión)</span>`;
+    } else {
+      ppr.textContent = 'Ingresa un peso para calcular.';
+    }
+
+    // Sección 04: volumen
+    calcularVolumen();
+  }
+
+  function calcularVolumen() {
+    const summary = document.getElementById('volSummary');
+    const cantidadProducir = parseInt(document.getElementById('volCantidad').value) || 0;
+    const p = calcularPorPieza();
+
+    if (cantidadProducir <= 0 || p.peso <= 0) {
+      summary.innerHTML = '<div class="vol-empty">Define la cantidad de piezas y el peso (sección 02) para calcular el lote.</div>';
+      return;
+    }
+
+    // Filamento necesario
+    const filamentoTotalG = p.peso * cantidadProducir;
+    const carretesNecesarios = Math.ceil(filamentoTotalG / p.t.rolloPeso);
+    const filamentoComprado = carretesNecesarios * p.t.rolloPeso;
+    const sobrante = filamentoComprado - filamentoTotalG;
+
+    // Costo de filamento según modo
+    let costoFilamentoTotal, costoFilamentoNote;
+    if (volModo === 'completo') {
+      costoFilamentoTotal = carretesNecesarios * p.t.rolloPrecio;
+      costoFilamentoNote = `${carretesNecesarios} × ${fmt(p.t.rolloPrecio)}`;
+    } else {
+      costoFilamentoTotal = filamentoTotalG * p.t.filGramo;
+      costoFilamentoNote = `${filamentoTotalG.toFixed(0)}g × ${fmt(p.t.filGramo)}/g`;
+    }
+
+    const costoLuzTotal = filamentoTotalG * p.t.extraGramo;
+    const costoEnviosTotal = p.envio * cantidadProducir;
+    const totalInversion = costoFilamentoTotal + costoLuzTotal + costoEnviosTotal;
+
+    // Ingresos
+    const ingresoBruto = p.precioVenta * cantidadProducir;
+    const comisionTotal = p.comision * cantidadProducir;
+    const ingresoNeto = ingresoBruto - comisionTotal;
+
+    // Resultado
+    const utilidadNeta = ingresoNeto - totalInversion;
+    const utilidadPorPieza = cantidadProducir > 0 ? utilidadNeta / cantidadProducir : 0;
+    const margenInv = totalInversion > 0 ? (utilidadNeta / totalInversion) * 100 : 0;
+    const margenIng = ingresoNeto > 0 ? (utilidadNeta / ingresoNeto) * 100 : 0;
+
+    const envioRow = p.envio > 0
+      ? `<div class="vol-row"><span>Envíos (${cantidadProducir} × ${fmt(p.envio)})</span><span class="vol-value">${fmt(costoEnviosTotal)}</span></div>`
+      : '';
+
+    const comisionRow = p.tasaComision > 0
+      ? `<div class="vol-row"><span>− Comisiones (${(p.tasaComision * 100).toFixed(1)}%)</span><span class="vol-value negative">−${fmt(comisionTotal)}</span></div>`
+      : '';
+
+    summary.innerHTML = `
+      <div class="vol-section">
+        <div class="vol-section-title">Producción</div>
+        <div class="vol-row"><span>Piezas a producir</span><span class="vol-value">${cantidadProducir}</span></div>
+        <div class="vol-row"><span>Filamento necesario</span><span class="vol-value">${filamentoTotalG.toFixed(0)} g</span></div>
+        <div class="vol-row"><span>Carretes a comprar</span><span class="vol-value">${carretesNecesarios} rollo${carretesNecesarios !== 1 ? 's' : ''}</span></div>
+        <div class="vol-row"><span>Sobrante</span><span class="vol-value">${sobrante.toFixed(0)} g</span></div>
+      </div>
+
+      <div class="vol-section">
+        <div class="vol-section-title">Inversión (lo que pagas)</div>
+        <div class="vol-row"><span>Filamento (${costoFilamentoNote})</span><span class="vol-value">${fmt(costoFilamentoTotal)}</span></div>
+        <div class="vol-row"><span>Luz + mantenimiento (${filamentoTotalG.toFixed(0)}g)</span><span class="vol-value">${fmt(costoLuzTotal)}</span></div>
+        ${envioRow}
+        <div class="vol-row total"><span>Total inversión</span><span class="vol-value">${fmt(totalInversion)}</span></div>
+      </div>
+
+      <div class="vol-section">
+        <div class="vol-section-title">Ingresos (lo que recibes)</div>
+        <div class="vol-row"><span>Precio venta unitario</span><span class="vol-value">${fmt(p.precioVenta)}</span></div>
+        <div class="vol-row"><span>Ingreso bruto (${cantidadProducir} ventas)</span><span class="vol-value">${fmt(ingresoBruto)}</span></div>
+        ${comisionRow}
+        <div class="vol-row total"><span>Ingreso neto</span><span class="vol-value">${fmt(ingresoNeto)}</span></div>
+      </div>
+
+      <div class="vol-section vol-final">
+        <div class="vol-row vol-big">
+          <span>UTILIDAD NETA</span>
+          <span class="vol-value ${utilidadNeta >= 0 ? 'positive' : 'negative'}">${fmt(utilidadNeta)}</span>
+        </div>
+        <div class="vol-row vol-sub">
+          <span>Por pieza</span>
+          <span class="vol-value">${fmt(utilidadPorPieza)}</span>
+        </div>
+        <div class="vol-row vol-sub">
+          <span>Margen sobre inversión</span>
+          <span class="vol-value">${margenInv.toFixed(1)}%</span>
+        </div>
+        <div class="vol-row vol-sub">
+          <span>Margen sobre ingreso</span>
+          <span class="vol-value">${margenIng.toFixed(1)}%</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function seleccionarMultiplicador(valor) {
+    multiplicadorActual = valor;
+    document.querySelectorAll('#multGroup .seg-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mult === valor);
+    });
+    const wrap = document.getElementById('utilidadManualWrap');
+    if (valor === 'manual') {
+      wrap.classList.remove('hidden');
+      setTimeout(() => document.getElementById('utilidadManual').focus(), 50);
+    } else {
+      wrap.classList.add('hidden');
+    }
+    calcular();
+  }
+
+  function seleccionarComision(valor) {
+    comisionActual = valor;
+    document.querySelectorAll('#comGroup .seg-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.com === valor);
+    });
+    const wrap = document.getElementById('comisionManualWrap');
+    if (valor === 'manual') {
+      wrap.classList.remove('hidden');
+      setTimeout(() => document.getElementById('comisionManual').focus(), 50);
+    } else {
+      wrap.classList.add('hidden');
+    }
+    calcular();
+  }
+
+  function seleccionarModoCarrete(valor) {
+    volModo = valor;
+    document.querySelectorAll('#modoCarreteGroup .seg-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.modo === valor);
+    });
+    calcularVolumen();
+  }
+
+  // ===== HISTORIAL =====
+  function guardarPieza() {
+    const nombre = document.getElementById('piezaNombre').value.trim() || 'Pieza sin nombre';
+    const peso = parseFloat(document.getElementById('piezaPeso').value);
+
+    if (!peso || peso <= 0) {
+      alert('Ingresa un peso válido para la pieza.');
+      return;
+    }
+
+    const p = calcularPorPieza();
+
+    let multLabel = '';
+    if (multiplicadorActual === 'manual') {
+      multLabel = 'manual';
+    } else {
+      multLabel = multiplicadorActual + 'X';
+    }
+
+    const registro = {
+      id: Date.now(),
+      fecha: new Date().toISOString(),
+      nombre,
+      peso: p.peso,
+      cantidad: p.cantidad,
+      pesoTotal: p.pesoTotal,
+      costoFilGramo: p.t.filGramo,
+      tarifaExtra: p.t.extraGramo,
+      costoProduccion: p.costoProduccion,
+      envio: p.envio,
+      multiplicador: multLabel,
+      utilidad: p.utilidad,
+      tasaComision: p.tasaComision,
+      comision: p.comision,
+      precioVenta: p.precioVenta,
+      neto: p.subtotal
+    };
+
+    const historial = cargarHistorial();
+    historial.unshift(registro);
+    guardarHistorial(historial);
+    renderHistorial();
+    limpiarFormulario();
+  }
+
+  function limpiarFormulario() {
+    document.getElementById('piezaNombre').value = '';
+    document.getElementById('piezaPeso').value = '';
+    document.getElementById('piezaCantidad').value = '1';
+    document.getElementById('piezaEnvio').value = '';
+    document.getElementById('utilidadManual').value = '';
+    document.getElementById('comisionManual').value = '';
+    seleccionarMultiplicador('1');
+    seleccionarComision('6');
+    document.getElementById('piezaNombre').focus();
+  }
+
+  function eliminarPieza(id) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    const historial = cargarHistorial().filter(r => r.id !== id);
+    guardarHistorial(historial);
+    renderHistorial();
+  }
+
+  function borrarTodo() {
+    if (!confirm('¿Borrar TODO el historial? Esta acción no se puede deshacer.')) return;
+    localStorage.removeItem(LS_HISTORIAL);
+    renderHistorial();
+  }
+
+  function fechaCorta(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+  }
+
+  function renderHistorial() {
+    const historial = cargarHistorial();
+    const contenedor = document.getElementById('historialContenedor');
+    const acciones = document.getElementById('historialAcciones');
+    const cards = document.getElementById('summaryCards');
+    const contador = document.getElementById('contadorRegistro');
+
+    contador.textContent = historial.length === 1 ? '1 registro' : `${historial.length} registros`;
+
+    if (historial.length === 0) {
+      contenedor.innerHTML = '<div class="empty">Aún no has guardado ninguna pieza.</div>';
+      acciones.style.display = 'none';
+      cards.style.display = 'none';
+      return;
+    }
+
+    acciones.style.display = 'flex';
+    cards.style.display = 'grid';
+
+    const totales = historial.reduce((acc, r) => {
+      acc.piezas += r.cantidad;
+      acc.gramos += r.pesoTotal;
+      acc.produccion += (r.costoProduccion ?? 0);
+      acc.envio += (r.envio || 0);
+      acc.comision += (r.comision || 0);
+      acc.utilidad += (r.utilidad || 0);
+      acc.venta += (r.precioVenta || 0);
+      return acc;
+    }, { piezas: 0, gramos: 0, produccion: 0, envio: 0, comision: 0, utilidad: 0, venta: 0 });
+
+    document.getElementById('sumPiezas').textContent = totales.piezas;
+    document.getElementById('sumGramos').textContent = totales.gramos.toFixed(1) + ' g';
+    document.getElementById('sumUtilidad').textContent = fmt(totales.utilidad);
+    document.getElementById('sumVenta').textContent = fmt(totales.venta);
+
+    let html = `<div style="overflow-x:auto"><table class="history-table">
+      <thead><tr>
+        <th>Fecha</th>
+        <th>Pieza</th>
+        <th class="num">Cant.</th>
+        <th class="num">Peso</th>
+        <th class="num">Producción</th>
+        <th class="num">Mult.</th>
+        <th class="num">Utilidad</th>
+        <th class="num">Envío</th>
+        <th class="num">Comisión</th>
+        <th class="num">Precio venta</th>
+        <th></th>
+      </tr></thead><tbody>`;
+
+    historial.forEach(r => {
+      const envio = r.envio || 0;
+      const produccion = r.costoProduccion ?? 0;
+      const comision = r.comision || 0;
+      const tasaCom = r.tasaComision || 0;
+      const comStr = comision > 0
+        ? `<span style="color:var(--negative)">−${fmt(comision)}</span><br><span style="font-size:10px;color:var(--ink-soft)">${(tasaCom * 100).toFixed(1)}%</span>`
+        : '—';
+      html += `<tr>
+        <td>${fechaCorta(r.fecha)}</td>
+        <td>${r.nombre}</td>
+        <td class="num">${r.cantidad}</td>
+        <td class="num">${r.pesoTotal.toFixed(1)}g</td>
+        <td class="num">${fmt(produccion)}</td>
+        <td class="num">${r.multiplicador || '—'}</td>
+        <td class="num"><span style="color:var(--positive)">${fmt(r.utilidad || 0)}</span></td>
+        <td class="num">${envio > 0 ? fmt(envio) : '—'}</td>
+        <td class="num">${comStr}</td>
+        <td class="num"><strong>${fmt(r.precioVenta || 0)}</strong></td>
+        <td><button class="delete-btn" onclick="eliminarPieza(${r.id})" title="Eliminar">✕</button></td>
+      </tr>`;
+    });
+
+    html += `<tr class="totals">
+      <td colspan="2">TOTALES</td>
+      <td class="num">${totales.piezas}</td>
+      <td class="num">${totales.gramos.toFixed(1)}g</td>
+      <td class="num">${fmt(totales.produccion)}</td>
+      <td class="num">—</td>
+      <td class="num">${fmt(totales.utilidad)}</td>
+      <td class="num">${fmt(totales.envio)}</td>
+      <td class="num">${fmt(totales.comision)}</td>
+      <td class="num">${fmt(totales.venta)}</td>
+      <td></td>
+    </tr>`;
+
+    html += '</tbody></table></div>';
+    contenedor.innerHTML = html;
+  }
+
+  function exportarCSV() {
+    const historial = cargarHistorial();
+    if (historial.length === 0) return;
+
+    let csv = 'Fecha,Pieza,Cantidad,Peso unitario (g),Peso total (g),Costo filamento/g,Tarifa extra/g,Costo producción,Multiplicador,Utilidad,Envío,Tasa comisión %,Comisión $,Precio venta,Neto recibido\n';
+    historial.forEach(r => {
+      csv += [
+        r.fecha.split('T')[0],
+        `"${r.nombre.replace(/"/g, '""')}"`,
+        r.cantidad,
+        r.peso,
+        r.pesoTotal,
+        r.costoFilGramo.toFixed(4),
+        r.tarifaExtra.toFixed(4),
+        (r.costoProduccion ?? 0).toFixed(2),
+        r.multiplicador || '',
+        (r.utilidad || 0).toFixed(2),
+        (r.envio || 0).toFixed(2),
+        ((r.tasaComision || 0) * 100).toFixed(2),
+        (r.comision || 0).toFixed(2),
+        (r.precioVenta || 0).toFixed(2),
+        (r.neto ?? ((r.precioVenta || 0) - (r.comision || 0))).toFixed(2)
+      ].join(',') + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `costos-impresion-3d-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ===== LISTENERS =====
+  ['rolloPeso', 'rolloPrecio', 'tarifaExtra'].forEach(id => {
+    document.getElementById(id).addEventListener('input', actualizarTarifas);
+  });
+  ['piezaPeso', 'piezaCantidad', 'piezaEnvio', 'utilidadManual', 'comisionManual', 'volCantidad'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calcular);
+  });
+  document.querySelectorAll('#multGroup .seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => seleccionarMultiplicador(btn.dataset.mult));
+  });
+  document.querySelectorAll('#comGroup .seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => seleccionarComision(btn.dataset.com));
+  });
+  document.querySelectorAll('#modoCarreteGroup .seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => seleccionarModoCarrete(btn.dataset.modo));
+  });
+
+  // ===== INIT =====
+  cargarConfig();
+  actualizarTarifas();
+  renderHistorial();
+</script>
+
+</body>
+</html>
