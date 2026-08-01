@@ -692,22 +692,22 @@
       <div class="result-cell">
         <div class="result-label">Precio base</div>
         <div class="result-value price-copy" id="pdBase" onclick="copiarPrecio(this)">$0.00</div>
-        <div class="result-sub">50% arriba del mínimo</div>
+        <div class="result-sub">venta + 50%</div>
       </div>
       <div class="result-cell">
         <div class="result-label">Precio mínimo</div>
         <div class="result-value price-copy" id="pdMinimo" onclick="copiarPrecio(this)">$0.00</div>
-        <div class="result-sub">venta ÷ 3</div>
+        <div class="result-sub">= precio de venta</div>
       </div>
       <div class="result-cell">
         <div class="result-label">Precio máximo</div>
         <div class="result-value price-copy" id="pdMaximo" onclick="copiarPrecio(this)">$0.00</div>
-        <div class="result-sub">venta + 50%</div>
+        <div class="result-sub">base + 50%</div>
       </div>
       <div class="result-cell">
         <div class="result-label">Precio descuento</div>
         <div class="result-value price-copy" id="pdDescuento" onclick="copiarPrecio(this)">$0.00</div>
-        <div class="result-sub">venta + 20%</div>
+        <div class="result-sub">base − 25%</div>
       </div>
     </div>
     <div style="font-family: var(--mono); font-size: 11px; color: var(--ink-soft); margin-top: 8px;">
@@ -978,10 +978,10 @@
 
     // Definición de precio (marketplace)
     const pv = p.precioVenta;
-    const pdMinimo = pv / 3;
-    const pdBase = pdMinimo * 1.5;   // 50% arriba del mínimo
-    const pdMaximo = pv * 1.5;       // 50% arriba de la venta
-    const pdDescuento = pv * 1.20;   // 20% arriba de la venta
+    const pdMinimo = pv;             // igual a la venta
+    const pdBase = pv * 1.5;         // 50% arriba de la venta
+    const pdMaximo = pdBase * 1.5;   // 50% arriba del base
+    const pdDescuento = pdBase * 0.75; // 25% menos del base
     setPrecioCopy('pdMinimo', pdMinimo);
     setPrecioCopy('pdBase', pdBase);
     setPrecioCopy('pdMaximo', pdMaximo);
