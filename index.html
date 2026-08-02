@@ -983,6 +983,9 @@
     const pdMaximo = pdBase * 1.5;   // 50% arriba del base
     const pdDescuento = pdBase * 0.72; // 28% menos del base
     setPrecioCopy('pdMinimo', pdMinimo);
+    // Mostrar en paréntesis el valor dividido entre 3
+    const minEl = document.getElementById('pdMinimo');
+    minEl.innerHTML = fmt(pdMinimo) + ' <span style="font-size:12px;color:var(--ink-soft);font-weight:400">(' + fmt(pdMinimo / 3) + ')</span>';
     setPrecioCopy('pdBase', pdBase);
     setPrecioCopy('pdMaximo', pdMaximo);
     setPrecioCopy('pdDescuento', pdDescuento);
